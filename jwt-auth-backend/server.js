@@ -8,8 +8,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cors());
-
-const secretKey = 'ClH9fA8J702JFLALvbCvA2fXXc7f1xznptYBKzT8mQE='; // Replace with your own secret key
+const secretKey = 'ClH9fA8J702JFLALvbCvA2fXXc7f1xznptYBKzT8mQE=';
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/mydb', {
@@ -32,62 +31,77 @@ const School = mongoose.model('School', schoolSchema);
 
 // Define User schema
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, required: true },
-  school: { type: String, required: true } // Ensure this field is included
-});
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, required: true },
+    school: { type: String, required: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    grade: { type: String, required: true }
+  });
+  
 
 // Create User model
 const User = mongoose.model('User', userSchema);
 
 // Register endpoint
+// Register endpoint
 app.post('/register', async (req, res) => {
-  const { email, password, role, schoolCode } = req.body;
-
-  try {
-    // Check if the email is already registered
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).send('Email already registered');
+    const { email, password, role, schoolCode, firstName, lastName, grade } = req.body;
+  
+    try {
+      // Check if the email is already registered
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).send('Email already registered');
+      }
+  
+      // Find the school by code
+      const school = await School.findOne({ code: schoolCode });
+      if (!school) {
+        return res.status(400).send('Invalid school code');
+      }
+  
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Create a new user instance
+      const user = new User({ email, password: hashedPassword, role, school: school.name, firstName, lastName, grade });
+  
+      // Save the new user to the database
+      const savedUser = await user.save();
+      console.log('User saved:', savedUser);
+      // Generate token
+      const token = jwt.sign({ email: user.email, role: user.role, school: user.school }, secretKey, { expiresIn: '1h' });
+      res.status(201).json({ token, role: user.role, school: user.school, firstName: user.firstName, lastName: user.lastName });
+    } catch (error) {
+      console.error('Error registering user:', error);
+      res.status(500).send('Error registering user');
     }
-
-    // Find the school by code
-    const school = await School.findOne({ code: schoolCode });
-    if (!school) {
-      return res.status(400).send('Invalid school code');
+  });
+  
+  // Login endpoint
+  app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).send('Invalid email or password');
     }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new user instance
-    const user = new User({ email, password: hashedPassword, role, school: school.name });
-
-    // Save the new user to the database
-    const savedUser = await user.save();
-    console.log('User saved:', savedUser);
-    res.status(201).send('User registered');
-  } catch (error) {
-    console.error('Error registering user:', error);
-    res.status(500).send('Error registering user');
-  }
-});
-
-// Login endpoint
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(401).send('Invalid email or password');
-  }
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(401).send('Invalid email or password');
-  }
-  const token = jwt.sign({ email: user.email, role: user.role, school: user.school }, secretKey, { expiresIn: '1h' });
-  res.json({ token, role: user.role, school: user.school });
-});
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send('Invalid email or password');
+    }
+    const token = jwt.sign({ email: user.email, role: user.role }, secretKey, { expiresIn: '1h' });
+    res.json({ 
+      token, 
+      role: user.role, 
+      school: user.school, 
+      firstName: user.firstName, 
+      lastName: user.lastName 
+    });
+  });
+  
+  
 
 // Protected endpoint
 app.get('/protected', (req, res) => {

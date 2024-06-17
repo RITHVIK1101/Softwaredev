@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'signup_screen.dart';  // Import the SignupScreen
+import 'screens/teacher_screen.dart';
+import 'screens/student_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -17,19 +18,32 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text,
       _passwordController.text,
     );
-    if (result != null && result['token'] != null && result['role'] != null && result['school'] != null) {
-      print('Login successful, token: ${result['token']}, role: ${result['role']}, school: ${result['school']}');
+
+    if (result != null) {
+      print('Login successful, token: ${result['token']}');
       if (result['role'] == 'teacher') {
-        Navigator.pushReplacementNamed(
+        Navigator.push(
           context,
-          '/teacher',
-          arguments: {'token': result['token']!, 'school': result['school']!},
+          MaterialPageRoute(
+            builder: (context) => TeacherScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
         );
       } else if (result['role'] == 'student') {
-        Navigator.pushReplacementNamed(
+        Navigator.push(
           context,
-          '/student',
-          arguments: {'token': result['token']!, 'school': result['school']!},
+          MaterialPageRoute(
+            builder: (context) => StudentScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
         );
       }
     } else {
@@ -63,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/signup');  // Navigate to signup screen
+                Navigator.pushNamed(context, '/signup');
               },
               child: Text('Don\'t have an account? Sign up'),
             ),
