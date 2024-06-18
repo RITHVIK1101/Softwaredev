@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+    
   http: ^0.13.4
 
 dev_dependencies:
@@ -20,3 +21,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets: 
+      - C:\Users\kriti\Projects\Softwaredev\assets\login_background.png
