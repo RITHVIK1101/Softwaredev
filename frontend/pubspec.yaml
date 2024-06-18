@@ -22,4 +22,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
-      - C:\Users\kriti\Projects\Softwaredev\assets\login_background.png
+      - assets\login_background.png
