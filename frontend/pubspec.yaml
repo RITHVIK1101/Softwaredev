@@ -21,5 +21,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
   assets: 
-      - assets\login_background.png
+    - "images/login_background.png"
