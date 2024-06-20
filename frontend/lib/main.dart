@@ -3,7 +3,7 @@ import 'login_screen.dart';
 import 'signup_screen.dart';
 import 'screens/teacher_screen.dart';
 import 'screens/student_screen.dart';
-import 'screens/assignments_screen.dart';
+import 'screens/student_classes_screen.dart'; // Import the screen
 
 void main() {
   runApp(MyApp());
@@ -21,19 +21,32 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
-        '/teacher': (context) => TeacherScreen(
-          token: ModalRoute.of(context)!.settings.arguments as String,
-          school: ModalRoute.of(context)!.settings.arguments as String,
-          firstName: ModalRoute.of(context)!.settings.arguments as String,
-          lastName: ModalRoute.of(context)!.settings.arguments as String,
-        ),
-        '/student': (context) => StudentScreen(
-          token: ModalRoute.of(context)!.settings.arguments as String,
-          school: ModalRoute.of(context)!.settings.arguments as String,
-          firstName: ModalRoute.of(context)!.settings.arguments as String,
-          lastName: ModalRoute.of(context)!.settings.arguments as String,
-        ),
-        '/assignments': (context) => AssignmentsScreen(),
+        '/teacher': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return TeacherScreen(
+            token: args['token'],
+            school: args['school'],
+            firstName: args['firstName'],
+            lastName: args['lastName'],
+          );
+        },
+        '/student': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return StudentScreen(
+            token: args['token'],
+            school: args['school'],
+            firstName: args['firstName'],
+            lastName: args['lastName'],
+            userId: args['userId'],
+          );
+        },
+        '/student/classes': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return StudentClassesScreen(
+            token: args['token'],
+            userId: args['userId'],
+          );
+        },
       },
     );
   }
