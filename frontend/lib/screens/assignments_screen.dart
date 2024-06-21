@@ -1,5 +1,3 @@
-// lib/screens/assignments_screen.dart
-
 import 'package:flutter/material.dart';
 
 class AssignmentsScreen extends StatelessWidget {
@@ -10,7 +8,7 @@ class AssignmentsScreen extends StatelessWidget {
         title: Text('Assignments'),
       ),
       body: Center(
-        child: Text('Assignments will be shown here'),
+        child: Text('List of assignments will be displayed here.'),
       ),
     );
   }

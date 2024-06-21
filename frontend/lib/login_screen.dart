@@ -22,17 +22,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result != null) {
       print('Login successful, token: ${result['token']}');
-      final args = {
-        'token': result['token']!,
-        'school': result['school']!,
-        'firstName': result['firstName']!,
-        'lastName': result['lastName']!,
-        'userId': result['userId'] ?? '', // Ensure userId is non-nullable
-      };
       if (result['role'] == 'teacher') {
-        Navigator.pushNamed(context, '/teacher', arguments: args);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TeacherScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
+        );
       } else if (result['role'] == 'student') {
-        Navigator.pushNamed(context, '/student', arguments: args);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StudentScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
+        );
       }
     } else {
       print('Login failed');

@@ -3,6 +3,7 @@ import 'auth_service.dart';
 import 'screens/teacher_screen.dart';
 import 'screens/student_screen.dart';
 
+
 class SignupScreen extends StatefulWidget {
   @override
   _SignupScreenState createState() => _SignupScreenState();
@@ -30,17 +31,30 @@ class _SignupScreenState extends State<SignupScreen> {
     );
     if (result != null) {
       print('Signup successful, token: ${result['token']}');
-      final args = {
-        'token': result['token']!,
-        'school': result['school']!,
-        'firstName': result['firstName']!,
-        'lastName': result['lastName']!,
-        'userId': result['userId'] ?? '', // Ensure userId is non-nullable
-      };
       if (result['role'] == 'teacher') {
-        Navigator.pushNamed(context, '/teacher', arguments: args);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TeacherScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
+        );
       } else if (result['role'] == 'student') {
-        Navigator.pushNamed(context, '/student', arguments: args);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StudentScreen(
+              token: result['token']!,
+              school: result['school']!,
+              firstName: result['firstName']!,
+              lastName: result['lastName']!,
+            ),
+          ),
+        );
       }
     } else {
       print('Signup failed');

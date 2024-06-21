@@ -9,9 +9,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const secretKey = 'your-secret-key';
+// Use the secret key you generated
+const secretKey = '87b93161d7c16d621b33eb23a979637ce035a671b0e1076bb8a9257dc68a2e7d3380fe57956bc77fec8792bf0b1b7fe6cc1b02c9f55254328ae688ac9b864c1e';
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://Rithvik:rithvik123@sdapp1.4t2ccd9.mongodb.net/mydb?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -38,53 +39,44 @@ const userSchema = new mongoose.Schema({
   school: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  grade: { type: String, required: true },
-  classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }]
+  grade: { type: String, required: true }
 });
 
 // Create User model
 const User = mongoose.model('User', userSchema);
-
-// Define Class schema
-const classSchema = new mongoose.Schema({
-  className: { type: String, required: true },
-  subject: { type: String, required: true },
-  period: { type: String, required: true },
-  design: { type: String, required: true },
-  teacher: { type: String, required: true },
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  assignments: [{
-    name: { type: String, required: true },
-    description: { type: String, required: true }
-  }]
-});
-
-// Create Class model
-const Class = mongoose.model('Class', classSchema);
 
 // Register endpoint
 app.post('/register', async (req, res) => {
   const { email, password, role, schoolCode, firstName, lastName, grade } = req.body;
 
   try {
+    // Check if the email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).send('Email already registered');
     }
 
+    // Find the school by code
     const school = await School.findOne({ code: schoolCode });
     if (!school) {
       return res.status(400).send('Invalid school code');
     }
 
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create a new user instance
     const user = new User({ email, password: hashedPassword, role, school: school.name, firstName, lastName, grade });
 
+    // Save the new user to the database
     const savedUser = await user.save();
+    console.log('User saved:', savedUser);
+
+    // Generate token
     const token = jwt.sign({ email: user.email, role: user.role, school: user.school }, secretKey, { expiresIn: '1h' });
     res.status(201).json({ token, role: user.role, school: user.school, firstName: user.firstName, lastName: user.lastName });
   } catch (error) {
+    console.error('Error registering user:', error);
     res.status(500).send('Error registering user');
   }
 });
@@ -102,132 +94,6 @@ app.post('/login', async (req, res) => {
   }
   const token = jwt.sign({ email: user.email, role: user.role, school: user.school }, secretKey, { expiresIn: '1h' });
   res.json({ token, role: user.role, school: user.school, firstName: user.firstName, lastName: user.lastName });
-});
-
-// Add class endpoint
-app.post('/classes', async (req, res) => {
-  const { className, subject, period, design, teacher } = req.body;
-
-  try {
-    const newClass = new Class({ className, subject, period, design, teacher });
-    const savedClass = await newClass.save();
-    res.status(201).json(savedClass);
-  } catch (error) {
-    res.status(500).send('Error adding class');
-  }
-});
-
-// Add students to class endpoint
-app.post('/classes/addStudents', async (req, res) => {
-  const { className, students } = req.body;
-  console.log(`Adding students to class: ${className}, Students: ${students}`);
-
-  try {
-    const classDoc = await Class.findOne({ className });
-    if (!classDoc) {
-      console.log('Class not found');
-      return res.status(404).send('Class not found');
-    }
-
-    // Check if students array is empty
-    if (students.length === 0) {
-      console.log('No students selected');
-      return res.status(200).send('No students added to class');
-    }
-
-    // Log the class document before adding students
-    console.log(`Class before adding students: ${JSON.stringify(classDoc)}`);
-
-    // Add students to the class only if they are not already added
-    students.forEach(studentId => {
-      const objectId = new mongoose.Types.ObjectId(studentId); // Add 'new' keyword
-      if (!classDoc.students.includes(objectId)) {
-        classDoc.students.push(objectId);
-      }
-    });
-
-    // Log the class document after adding students
-    console.log(`Class after adding students: ${JSON.stringify(classDoc)}`);
-    const userIds = students.map(studentId => new mongoose.Types.ObjectId(studentId));
-    await User.updateMany({ _id: { $in: userIds } }, { $push: { classes: classDoc._id } });
-
-    await classDoc.save();
-    console.log('Students added to class successfully');
-    res.status(200).send('Students added to class');
-  } catch (error) {
-    console.error('Error adding students to class:', error);
-    res.status(500).send('Error adding students to class');
-  }
-});
-
-// Add assignment to class endpoint
-app.post('/classes/:classId/assignments', async (req, res) => {
-  const { classId } = req.params;
-  const { name, description } = req.body;
-
-  try {
-    const classDoc = await Class.findById(classId);
-    if (!classDoc) {
-      return res.status(404).send('Class not found');
-    }
-
-    classDoc.assignments.push({ name, description });
-    await classDoc.save();
-
-    res.status(201).send('Assignment added');
-  } catch (error) {
-    res.status(500).send('Error adding assignment');
-  }
-});
-
-app.get('/students/:studentId/classes', async (req, res) => {
-  const studentId = req.params.studentId;
-
-  try {
-    const user = await User.findById(studentId).populate('classes');
-    const classes = user.classes;
-    res.json(classes);
-  } catch (error) {
-    res.status(500).send('Error fetching classes for student');
-  }
-});
-
-// Fetch classes endpoint
-app.get('/classes', async (req, res) => {
-  const teacher = req.query.teacher;
-  try {
-    const classes = await Class.find({ teacher });
-    res.json(classes);
-  } catch (error) {
-    res.status(500).send('Error fetching classes');
-  }
-});
-
-// Fetch students endpoint
-app.get('/students', async (req, res) => {
-  const school = req.query.school;
-  console.log(`Fetching students for school: ${school}`);  // Log the school query parameter
-  try {
-    const students = await User.find({ school: school, role: 'student' });
-    console.log(`Found students: ${JSON.stringify(students)}`);  // Log the found students
-    res.json(students);
-  } catch (error) {
-    console.error('Error fetching students', error);
-    res.status(500).send('Error fetching students');
-  }
-});
-
-// Fetch classes for a specific student
-app.get('/students/:studentId/classes', async (req, res) => {
-  const studentId = req.params.studentId;
-
-  try {
-    const user = await User.findById(studentId).populate('classes');
-    const classes = user.classes;
-    res.json(classes);
-  } catch (error) {
-    res.status(500).send('Error fetching classes for student');
-  }
 });
 
 // Protected endpoint

@@ -5,14 +5,12 @@ class StudentScreen extends StatefulWidget {
   final String school;
   final String firstName;
   final String lastName;
-  final String userId;
 
   StudentScreen({
     required this.token,
     required this.school,
     required this.firstName,
     required this.lastName,
-    required this.userId,
   });
 
   @override
@@ -67,16 +65,9 @@ class _StudentScreenState extends State<StudentScreen> {
             ),
             ListTile(
               leading: Icon(Icons.message),
-              title: Text('Classes'),
+              title: Text('Messages'),
               onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/student/classes',
-                  arguments: {
-                    'token': widget.token,
-                    'userId': widget.userId,
-                  },
-                );
+                // Add navigation to the messages screen
               },
             ),
             ListTile(
@@ -88,6 +79,9 @@ class _StudentScreenState extends State<StudentScreen> {
             ),
           ],
         ),
+      ),
+      body: Center(
+        child: Text('Welcome ${widget.firstName} ${widget.lastName}'),
       ),
     );
   }
