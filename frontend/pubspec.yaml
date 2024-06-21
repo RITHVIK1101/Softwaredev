@@ -26,6 +26,7 @@ flutter:
     - "images/login_background.png"
     - "images/logo.png"
     - "images/login_text.png"
+    - "images/signup_text.png"
   fonts:
   - family: Poppins
     fonts:
