@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class AuthService {
   final String baseUrl = 'http://localhost:3000';
 
-  Future<Map<String, String>?> login(String email, String password) async {
+  Future<Map<String, dynamic>?> login(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: <String, String>{
@@ -24,6 +24,7 @@ class AuthService {
         'school': data['school'] ?? '',
         'firstName': data['firstName'] ?? '',
         'lastName': data['lastName'] ?? '',
+        'userId': data['userId'] ?? '',
       };
     } else {
       print('Error during login: ${response.body}');
@@ -31,7 +32,7 @@ class AuthService {
     }
   }
 
-  Future<Map<String, String>?> register(
+  Future<Map<String, dynamic>?> register(
     String email,
     String password,
     String role,
@@ -64,6 +65,7 @@ class AuthService {
         'school': data['school'] ?? '',
         'firstName': data['firstName'] ?? '',
         'lastName': data['lastName'] ?? '',
+        'userId': data['userId'] ?? '',
       };
     } else {
       print('Error during registration: ${response.body}');
